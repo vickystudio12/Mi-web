@@ -2,236 +2,89 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Vicky Studio Electric ⚡</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Simulador Electricista Pro</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0a0a0a;
-  color:white;
-}
-
-/* PANTALLA INICIO */
-.home{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-
-.logo{
-  font-size:28px;
-  color:#00ff88;
-  margin-bottom:10px;
-}
-
-.sub{
-  color:#aaa;
-  margin-bottom:30px;
-}
-
-.btn{
-  padding:12px 25px;
-  background:#00ff88;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-}
-
-/* APP */
-.app{
-  display:none;
-}
-
-.top{
-  background:#111;
-  padding:10px;
-  display:flex;
-  justify-content:space-around;
-}
-
-.panel{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-
-/* BLOQUES */
-.box{
-  background:#1c1c1c;
-  padding:10px;
-  border-radius:10px;
-  margin:10px;
-  width:120px;
-}
-
-/* BORNES */
-.borne{
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  margin:8px auto;
-  cursor:pointer;
-}
-
-.fase{background:red;}
-.neutro{background:blue;}
-.tierra{background:yellow;}
-
-.selected{outline:3px solid white;}
-
-svg{
-  position:absolute;
-  top:0;
-  left:0;
-}
-
-line{stroke-width:4;}
-
-.flash{
-  animation:flash 0.2s 3;
-}
-
-@keyframes flash{
-  0%{background:red;}
-  100%{background:#0a0a0a;}
-}
+body {font-family: Arial; background:#0f172a; color:white; text-align:center}
+#board {margin:20px auto; width:300px; height:400px; background:#1e293b; border-radius:20px; padding:20px}
+.socket, .cable {width:60px; height:60px; border-radius:10px; margin:10px; display:inline-block}
+.socket {background:#334155}
+.cable {cursor:pointer}
+.red {background:red}
+.blue {background:blue}
+.yellow {background:yellow}
+.green {background:green}
+.correct {box-shadow:0 0 20px lime}
+.wrong {box-shadow:0 0 20px red}
+button {padding:10px 20px; border:none; border-radius:10px; background:#22c55e; color:white; font-size:16px}
 </style>
 </head>
-
 <body>
+<h1>⚡ Simulador Electricista</h1>
+<p>Conectá correctamente los cables</p>
 
-<!-- HOME -->
-<div class="home" id="home">
-  <div class="logo">⚡ Vicky Studio Electric</div>
-  <div class="sub">Simulador Profesional de Electricidad</div>
-  <button class="btn" onclick="entrar()">Entrar</button>
+<div id="board">
+<div id="sockets"></div>
+<div id="cables"></div>
 </div>
 
-<!-- APP -->
-<div class="app" id="app">
-
-<div class="top">
-<div>⏱️ <span id="tiempo">60</span></div>
-<div>⭐ <span id="puntos">0</span></div>
-</div>
-
-<div class="panel" id="panel"></div>
-<svg id="cables"></svg>
-
-</div>
-
-<audio id="error">
-<source src="https://www.soundjay.com/button/beep-10.mp3">
-</audio>
+<button onclick="checkConnections()">Verificar</button>
+<p id="result"></p>
 
 <script>
-function entrar(){
-  document.getElementById("home").style.display="none";
-  document.getElementById("app").style.display="block";
+const colors = ['red','blue','yellow','green'];
+let selectedCable = null;
+let connections = {};
+
+const socketsDiv = document.getElementById('sockets');
+const cablesDiv = document.getElementById('cables');
+
+colors.forEach(color => {
+  const socket = document.createElement('div');
+  socket.className = 'socket';
+  socket.dataset.color = color;
+  socket.onclick = () => connect(socket);
+  socketsDiv.appendChild(socket);
+
+  const cable = document.createElement('div');
+  cable.className = 'cable ' + color;
+  cable.onclick = () => selectCable(color);
+  cablesDiv.appendChild(cable);
+});
+
+function selectCable(color){
+  selectedCable = color;
 }
 
-/* LOGICA */
-let selected=null;
-let conexiones=[];
-let puntos=0;
-let tiempo=60;
+function connect(socket){
+  if(!selectedCable) return;
+  connections[socket.dataset.color] = selectedCable;
+  socket.style.background = selectedCable;
+}
 
-function init(){
-  let panel=document.getElementById("panel");
+function checkConnections(){
+  let correct = 0;
+  document.querySelectorAll('.socket').forEach(socket => {
+    const expected = socket.dataset.color;
+    const actual = connections[expected];
 
-  let elementos=[
-    ["Fase","fase"],
-    ["Neutro","neutro"],
-    ["Tierra","tierra"],
-    ["Disy In","fase"],
-    ["Disy Out","fase"],
-    ["Térmica In","fase"],
-    ["Térmica Out","fase"],
-    ["Carga","fase"]
-  ];
+    socket.classList.remove('correct','wrong');
 
-  elementos.forEach(e=>{
-    let div=document.createElement("div");
-    div.className="box";
-    div.innerHTML=e[0]+"<div class='borne "+e[1]+"' id='"+e[0]+"'></div>";
-    panel.appendChild(div);
-  });
-
-  document.querySelectorAll(".borne").forEach(b=>{
-    b.onclick=()=>{
-      if(!selected){
-        selected=b;
-        b.classList.add("selected");
-      }else{
-        conectar(selected,b);
-        selected.classList.remove("selected");
-        selected=null;
-      }
+    if(expected === actual){
+      socket.classList.add('correct');
+      correct++;
+    } else {
+      socket.classList.add('wrong');
     }
   });
-}
 
-function conectar(a,b){
-  conexiones.push([a.id,b.id]);
-
-  let svg=document.getElementById("cables");
-  let line=document.createElementNS("http://www.w3.org/2000/svg","line");
-
-  let r1=a.getBoundingClientRect();
-  let r2=b.getBoundingClientRect();
-
-  line.setAttribute("x1",r1.left+10);
-  line.setAttribute("y1",r1.top+10);
-  line.setAttribute("x2",r2.left+10);
-  line.setAttribute("y2",r2.top+10);
-
-  line.style.stroke = a.classList.contains("fase") ? "red" :
-                      a.classList.contains("neutro") ? "blue" : "yellow";
-
-  svg.appendChild(line);
-}
-
-function verificar(){
-  let ok = conexiones.some(c=>c[0]=="Fase" && c[1]=="Disy In");
-
-  if(ok){
-    puntos+=20;
-    alert("✅ Correcto");
-  }else{
-    fallo();
+  const result = document.getElementById('result');
+  if(correct === colors.length){
+    result.innerText = '✅ Perfecto! Instalación correcta';
+  } else {
+    result.innerText = '❌ Hay errores en la conexión';
   }
-
-  actualizar();
 }
-
-function fallo(){
-  document.body.classList.add("flash");
-  document.getElementById("error").play();
-  puntos-=10;
-  alert("💥 Cortocircuito");
-}
-
-function actualizar(){
-  document.getElementById("puntos").innerText=puntos;
-}
-
-setInterval(()=>{
-  tiempo--;
-  document.getElementById("tiempo").innerText=tiempo;
-
-  if(tiempo<=0){
-    alert("⏱️ Fin del examen");
-    location.reload();
-  }
-},1000);
-
-init();
 </script>
-
 </body>
 </html>
