@@ -2,222 +2,235 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Tablero PRO</title>
+<title>Vicky Studio Electric ⚡</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
 
 <style>
-body {
-  margin: 0;
-  background: #0a0a0a;
-  font-family: Arial;
-  color: white;
-  text-align: center;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0a0a0a;
+  color:white;
 }
 
-/* PANEL */
-.panel {
-  padding: 20px;
+/* PANTALLA INICIO */
+.home{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
-/* CABLES */
-.cable {
-  width: 4px;
-  height: 60px;
-  margin: auto;
-  background: red;
-  transition: 0.3s;
+.logo{
+  font-size:28px;
+  color:#00ff88;
+  margin-bottom:10px;
 }
 
-.cable.on {
-  background: #00ff88;
-  box-shadow: 0 0 10px #00ff88;
+.sub{
+  color:#aaa;
+  margin-bottom:30px;
 }
 
-/* SWITCH */
-.toggle {
-  width: 80px;
-  height: 35px;
-  border-radius: 40px;
-  background: #555;
-  margin: 10px auto;
-  position: relative;
+.btn{
+  padding:12px 25px;
+  background:#00ff88;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
 }
 
-.circle {
-  width: 30px;
-  height: 30px;
-  background: #ccc;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 3px;
-  transition: 0.3s;
+/* APP */
+.app{
+  display:none;
 }
 
-.toggle.active {
-  background: #00ff88;
+.top{
+  background:#111;
+  padding:10px;
+  display:flex;
+  justify-content:space-around;
 }
 
-.toggle.active .circle {
-  left: 45px;
+.panel{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
-/* LUZ */
-.light {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: red;
-  margin: 5px auto;
+/* BLOQUES */
+.box{
+  background:#1c1c1c;
+  padding:10px;
+  border-radius:10px;
+  margin:10px;
+  width:120px;
 }
 
-.light.on {
-  background: #00ff88;
-  box-shadow: 0 0 15px #00ff88;
+/* BORNES */
+.borne{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  margin:8px auto;
+  cursor:pointer;
 }
 
-/* BOTON FALLA */
-.falla {
-  margin-top: 20px;
-  padding: 10px;
-  background: red;
-  border: none;
-  color: white;
-  border-radius: 10px;
+.fase{background:red;}
+.neutro{background:blue;}
+.tierra{background:yellow;}
+
+.selected{outline:3px solid white;}
+
+svg{
+  position:absolute;
+  top:0;
+  left:0;
+}
+
+line{stroke-width:4;}
+
+.flash{
+  animation:flash 0.2s 3;
+}
+
+@keyframes flash{
+  0%{background:red;}
+  100%{background:#0a0a0a;}
 }
 </style>
 </head>
 
 <body>
 
-<h2>⚡ Tablero Inteligente</h2>
-
-<div class="panel">
-
-<!-- GENERAL -->
-<div>General</div>
-<div class="cable" id="cg"></div>
-<div class="light" id="lg"></div>
-<div class="toggle" onclick="generalToggle(this)">
-  <div class="circle"></div>
+<!-- HOME -->
+<div class="home" id="home">
+  <div class="logo">⚡ Vicky Studio Electric</div>
+  <div class="sub">Simulador Profesional de Electricidad</div>
+  <button class="btn" onclick="entrar()">Entrar</button>
 </div>
 
-<!-- DISYUNTOR -->
-<div>Disyuntor</div>
-<div class="cable" id="cd"></div>
-<div class="light" id="ld"></div>
-<div class="toggle" onclick="disyToggle(this)">
-  <div class="circle"></div>
+<!-- APP -->
+<div class="app" id="app">
+
+<div class="top">
+<div>⏱️ <span id="tiempo">60</span></div>
+<div>⭐ <span id="puntos">0</span></div>
 </div>
 
-<!-- LINEAS -->
-<div>Cocina</div>
-<div class="cable" id="c1"></div>
-<div class="light" id="l1"></div>
-<div class="toggle" onclick="linea(this,'l1','c1')">
-  <div class="circle"></div>
-</div>
-
-<div>Habitación</div>
-<div class="cable" id="c2"></div>
-<div class="light" id="l2"></div>
-<div class="toggle" onclick="linea(this,'l2','c2')">
-  <div class="circle"></div>
-</div>
-
-<div>Baño</div>
-<div class="cable" id="c3"></div>
-<div class="light" id="l3"></div>
-<div class="toggle" onclick="linea(this,'l3','c3')">
-  <div class="circle"></div>
-</div>
-
-<button class="falla" onclick="generarFalla()">💥 Generar Falla</button>
+<div class="panel" id="panel"></div>
+<svg id="cables"></svg>
 
 </div>
 
-<audio id="click">
-<source src="https://www.soundjay.com/buttons/sounds/button-16.mp3">
+<audio id="error">
+<source src="https://www.soundjay.com/button/beep-10.mp3">
 </audio>
 
 <script>
-let general = false;
-let disy = false;
-
-function sonido(){
-  let s=document.getElementById("click");
-  s.currentTime=0;
-  s.play();
+function entrar(){
+  document.getElementById("home").style.display="none";
+  document.getElementById("app").style.display="block";
 }
 
-function generalToggle(el){
-  general=!general;
-  el.classList.toggle("active");
-  toggleEstado("lg","cg",general);
+/* LOGICA */
+let selected=null;
+let conexiones=[];
+let puntos=0;
+let tiempo=60;
 
-  if(!general){
-    apagarTodo();
-  }
-  sonido();
-}
+function init(){
+  let panel=document.getElementById("panel");
 
-function disyToggle(el){
-  if(!general) return;
-  disy=!disy;
-  el.classList.toggle("active");
-  toggleEstado("ld","cd",disy);
+  let elementos=[
+    ["Fase","fase"],
+    ["Neutro","neutro"],
+    ["Tierra","tierra"],
+    ["Disy In","fase"],
+    ["Disy Out","fase"],
+    ["Térmica In","fase"],
+    ["Térmica Out","fase"],
+    ["Carga","fase"]
+  ];
 
-  if(!disy){
-    apagarLineas();
-  }
-  sonido();
-}
+  elementos.forEach(e=>{
+    let div=document.createElement("div");
+    div.className="box";
+    div.innerHTML=e[0]+"<div class='borne "+e[1]+"' id='"+e[0]+"'></div>";
+    panel.appendChild(div);
+  });
 
-function linea(el,luz,cable){
-  if(!general || !disy) return;
-  el.classList.toggle("active");
-
-  let on=el.classList.contains("active");
-  toggleEstado(luz,cable,on);
-  sonido();
-}
-
-function toggleEstado(l,c,on){
-  document.getElementById(l).classList.toggle("on",on);
-  document.getElementById(c).classList.toggle("on",on);
-}
-
-function apagarTodo(){
-  document.querySelectorAll(".light,.cable").forEach(e=>e.classList.remove("on"));
-  document.querySelectorAll(".toggle").forEach(e=>e.classList.remove("active"));
-  general=false; disy=false;
-}
-
-function apagarLineas(){
-  ["l1","l2","l3","c1","c2","c3"].forEach(id=>{
-    document.getElementById(id).classList.remove("on");
+  document.querySelectorAll(".borne").forEach(b=>{
+    b.onclick=()=>{
+      if(!selected){
+        selected=b;
+        b.classList.add("selected");
+      }else{
+        conectar(selected,b);
+        selected.classList.remove("selected");
+        selected=null;
+      }
+    }
   });
 }
 
-/* FALLA */
-function generarFalla(){
-  if(!general || !disy) return;
+function conectar(a,b){
+  conexiones.push([a.id,b.id]);
 
-  let lineas=["l1","l2","l3"];
-  let random=lineas[Math.floor(Math.random()*lineas.length)];
+  let svg=document.getElementById("cables");
+  let line=document.createElementNS("http://www.w3.org/2000/svg","line");
 
-  document.getElementById(random).classList.remove("on");
-  disy=false;
-  document.getElementById("ld").classList.remove("on");
-  alert("⚠️ Falla detectada - Saltó el disyuntor");
+  let r1=a.getBoundingClientRect();
+  let r2=b.getBoundingClientRect();
+
+  line.setAttribute("x1",r1.left+10);
+  line.setAttribute("y1",r1.top+10);
+  line.setAttribute("x2",r2.left+10);
+  line.setAttribute("y2",r2.top+10);
+
+  line.style.stroke = a.classList.contains("fase") ? "red" :
+                      a.classList.contains("neutro") ? "blue" : "yellow";
+
+  svg.appendChild(line);
 }
 
-/* PWA */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js');
+function verificar(){
+  let ok = conexiones.some(c=>c[0]=="Fase" && c[1]=="Disy In");
+
+  if(ok){
+    puntos+=20;
+    alert("✅ Correcto");
+  }else{
+    fallo();
+  }
+
+  actualizar();
 }
+
+function fallo(){
+  document.body.classList.add("flash");
+  document.getElementById("error").play();
+  puntos-=10;
+  alert("💥 Cortocircuito");
+}
+
+function actualizar(){
+  document.getElementById("puntos").innerText=puntos;
+}
+
+setInterval(()=>{
+  tiempo--;
+  document.getElementById("tiempo").innerText=tiempo;
+
+  if(tiempo<=0){
+    alert("⏱️ Fin del examen");
+    location.reload();
+  }
+},1000);
+
+init();
 </script>
 
 </body>
