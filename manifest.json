@@ -1,0 +1,15 @@
+{
+  "name": "Tablero PRO",
+  "short_name": "Tablero",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ff88",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1042/1042456.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
