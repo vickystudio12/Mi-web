@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tablero PRO</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
+<style>
+body {
+  margin: 0;
+  background: #0a0a0a;
+  font-family: Arial;
+  color: white;
+  text-align: center;
+}
+
+/* PANEL */
+.panel {
+  padding: 20px;
+}
+
+/* CABLES */
+.cable {
+  width: 4px;
+  height: 60px;
+  margin: auto;
+  background: red;
+  transition: 0.3s;
+}
+
+.cable.on {
+  background: #00ff88;
+  box-shadow: 0 0 10px #00ff88;
+}
+
+/* SWITCH */
+.toggle {
+  width: 80px;
+  height: 35px;
+  border-radius: 40px;
+  background: #555;
+  margin: 10px auto;
+  position: relative;
+}
+
+.circle {
+  width: 30px;
+  height: 30px;
+  background: #ccc;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  transition: 0.3s;
+}
+
+.toggle.active {
+  background: #00ff88;
+}
+
+.toggle.active .circle {
+  left: 45px;
+}
+
+/* LUZ */
+.light {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: red;
+  margin: 5px auto;
+}
+
+.light.on {
+  background: #00ff88;
+  box-shadow: 0 0 15px #00ff88;
+}
+
+/* BOTON FALLA */
+.falla {
+  margin-top: 20px;
+  padding: 10px;
+  background: red;
+  border: none;
+  color: white;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚡ Tablero Inteligente</h2>
+
+<div class="panel">
+
+<!-- GENERAL -->
+<div>General</div>
+<div class="cable" id="cg"></div>
+<div class="light" id="lg"></div>
+<div class="toggle" onclick="generalToggle(this)">
+  <div class="circle"></div>
+</div>
+
+<!-- DISYUNTOR -->
+<div>Disyuntor</div>
+<div class="cable" id="cd"></div>
+<div class="light" id="ld"></div>
+<div class="toggle" onclick="disyToggle(this)">
+  <div class="circle"></div>
+</div>
+
+<!-- LINEAS -->
+<div>Cocina</div>
+<div class="cable" id="c1"></div>
+<div class="light" id="l1"></div>
+<div class="toggle" onclick="linea(this,'l1','c1')">
+  <div class="circle"></div>
+</div>
+
+<div>Habitación</div>
+<div class="cable" id="c2"></div>
+<div class="light" id="l2"></div>
+<div class="toggle" onclick="linea(this,'l2','c2')">
+  <div class="circle"></div>
+</div>
+
+<div>Baño</div>
+<div class="cable" id="c3"></div>
+<div class="light" id="l3"></div>
+<div class="toggle" onclick="linea(this,'l3','c3')">
+  <div class="circle"></div>
+</div>
+
+<button class="falla" onclick="generarFalla()">💥 Generar Falla</button>
+
+</div>
+
+<audio id="click">
+<source src="https://www.soundjay.com/buttons/sounds/button-16.mp3">
+</audio>
+
+<script>
+let general = false;
+let disy = false;
+
+function sonido(){
+  let s=document.getElementById("click");
+  s.currentTime=0;
+  s.play();
+}
+
+function generalToggle(el){
+  general=!general;
+  el.classList.toggle("active");
+  toggleEstado("lg","cg",general);
+
+  if(!general){
+    apagarTodo();
+  }
+  sonido();
+}
+
+function disyToggle(el){
+  if(!general) return;
+  disy=!disy;
+  el.classList.toggle("active");
+  toggleEstado("ld","cd",disy);
+
+  if(!disy){
+    apagarLineas();
+  }
+  sonido();
+}
+
+function linea(el,luz,cable){
+  if(!general || !disy) return;
+  el.classList.toggle("active");
+
+  let on=el.classList.contains("active");
+  toggleEstado(luz,cable,on);
+  sonido();
+}
+
+function toggleEstado(l,c,on){
+  document.getElementById(l).classList.toggle("on",on);
+  document.getElementById(c).classList.toggle("on",on);
+}
+
+function apagarTodo(){
+  document.querySelectorAll(".light,.cable").forEach(e=>e.classList.remove("on"));
+  document.querySelectorAll(".toggle").forEach(e=>e.classList.remove("active"));
+  general=false; disy=false;
+}
+
+function apagarLineas(){
+  ["l1","l2","l3","c1","c2","c3"].forEach(id=>{
+    document.getElementById(id).classList.remove("on");
+  });
+}
+
+/* FALLA */
+function generarFalla(){
+  if(!general || !disy) return;
+
+  let lineas=["l1","l2","l3"];
+  let random=lineas[Math.floor(Math.random()*lineas.length)];
+
+  document.getElementById(random).classList.remove("on");
+  disy=false;
+  document.getElementById("ld").classList.remove("on");
+  alert("⚠️ Falla detectada - Saltó el disyuntor");
+}
+
+/* PWA */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
